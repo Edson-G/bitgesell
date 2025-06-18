@@ -4,7 +4,7 @@ const morgan = require('morgan');
 const itemsRouter = require('./routes/items');
 const statsRouter = require('./routes/stats');
 const cors = require('cors');
-const { getCookie, notFound } = require('./middleware/errorHandler');
+const { notFound, errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -18,9 +18,10 @@ app.use(morgan('dev'));
 app.use('/api/items', itemsRouter);
 app.use('/api/stats', statsRouter);
 
-// Not Found
+// Not Found - must be after all routes
 app.use('*', notFound);
 
-getCookie();
+// Error Handler - must be last
+app.use(errorHandler);
 
 app.listen(port, () => console.log('Backend running on http://localhost:' + port));
